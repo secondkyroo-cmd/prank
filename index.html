@@ -306,10 +306,20 @@
     </div>
   </div>
 
-  <script>
-    (function() {
-      // --- Data katalog dengan jarak tersusun (grid) ---
-      const catalogItems = [
+  
+      <script>
+  // Ambil data game dari URL (dari halaman sebelumnya)
+  const urlParams = new URLSearchParams(window.location.search);
+  const selectedGame = urlParams.get('game') || 'Tidak diketahui';
+
+  // Tampilkan game yang dipilih (opsional)
+  const gameDisplay = document.getElementById('selectedGameDisplay');
+  if (gameDisplay) {
+    gameDisplay.textContent = '🎮 ' + selectedGame;
+  }
+
+  // Data katalog
+  const catalogItems = [
         { name: "100Diamond", emoji: "💎" },
         { name: "5000Diamond", emoji: "💎" },
         { name: "10000Diamond", emoji: "💎" },
@@ -318,146 +328,51 @@
         { name: "9999999Diamond", emoji: "💎" }
       ];
 
-      // State
-      let selectedGame = "";
-      let selectedCatalog = null; // menyimpan nama katalog yang dipilih
+  let selectedCatalog = null;
 
-      // DOM Elements
-      const step1 = document.getElementById('step1');
-      const step2 = document.getElementById('step2');
-      const dot1 = document.getElementById('dot1');
-      const dot2 = document.getElementById('dot2');
-      const gameSelect = document.getElementById('gameSelect');
-      const toStep2Btn = document.getElementById('toStep2Btn');
-      const userIdInput = document.getElementById('userIdInput');
-      const userTextInput = document.getElementById('userTextInput');
-      const finalSubmitBtn = document.getElementById('finalSubmitBtn');
-      const catalogContainer = document.getElementById('catalogContainer');
-      const step2Note = document.getElementById('step2Note');
+  const catalogContainer = document.getElementById('catalogContainer');
+  const userIdInput = document.getElementById('userIdInput');
+  const userTextInput = document.getElementById('userTextInput');
+  const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+  const step2Note = document.getElementById('step2Note');
 
-      // --- Fungsi update UI step 1 ---
-      function checkGameSelection() {
-        selectedGame = gameSelect.value;
-        toStep2Btn.disabled = !selectedGame;
-      }
+  // Render katalog
+  catalogItems.forEach(function(item) {
+    const card = document.createElement('div');
+    card.className = 'catalog-item';
+    card.innerHTML = '<span class="catalog-emoji">' + item.emoji + '</span><span class="catalog-name">' + item.name + '</span>';
+    
+    card.addEventListener('click', function() {
+      document.querySelectorAll('.catalog-item').forEach(function(el) {
+        el.classList.remove('selected');
+      });
+      card.classList.add('selected');
+      selectedCatalog = item.name;
+      validateForm();
+    });
+    
+    catalogContainer.appendChild(card);
+  });
 
-      // --- Render katalog ---
-      function renderCatalog() {
-        if (!catalogContainer) return;
-        catalogContainer.innerHTML = '';
-        catalogItems.forEach(item => {
-          const card = document.createElement('div');
-          card.className = 'catalog-item';
-          if (selectedCatalog === item.name) {
-            card.classList.add('selected');
-          }
-          card.innerHTML = `
-            <span class="catalog-emoji">${item.emoji}</span>
-            <span class="catalog-name">${item.name}</span>
-          `;
-          card.addEventListener('click', () => {
-            // Hapus seleksi sebelumnya
-            document.querySelectorAll('.catalog-item').forEach(el => el.classList.remove('selected'));
-            // Tandai yang baru
-            card.classList.add('selected');
-            selectedCatalog = item.name;
-            validateStep2();
-          });
-          catalogContainer.appendChild(card);
-        });
-      }
+  // Validasi form
+  function validateForm() {
+    const idValue = userIdInput.value.trim();
+    const textValue = userTextInput.value.trim();
+    const isIdValid = idValue !== '' && /^\d+$/.test(idValue);
+    const isTextFilled = textValue !== '';
+    const isCatalogSelected = selectedCatalog !== null;
 
-      // --- Validasi step 2 (ID harus angka, teks tidak kosong, katalog terpilih) ---
-      function validateStep2() {
-        const idValue = userIdInput.value.trim();
-        const textValue = userTextInput.value.trim();
-        const isIdValid = idValue !== '' && /^\d+$/.test(idValue); // hanya angka
-        const isTextFilled = textValue !== '';
-        const isCatalogSelected = selectedCatalog !== null && selectedCatalog !== '';
+    finalSubmitBtn.disabled = !(isIdValid && isTextFilled && isCatalogSelected);
+  }
 
-        const allValid = isIdValid && isTextFilled && isCatalogSelected;
-        finalSubmitBtn.disabled = !allValid;
+  userIdInput.addEventListener('input', validateForm);
+  userTextInput.addEventListener('input', validateForm);
 
-        // Update note kecil
-        if (!allValid) {
-          if (!isIdValid && idValue === '') step2Note.textContent = '🔢 Masukkan ID (angka)';
-          else if (!isIdValid) step2Note.textContent = '⚠️ ID harus berupa angka';
-          else if (!isTextFilled) step2Note.textContent = '📝 Isi teks singkat';
-          else if (!isCatalogSelected) step2Note.textContent = '📦 Pilih salah satu katalog';
-        } else {
-          step2Note.textContent = '✅ Siap melanjutkan ke berkas lain';
-        }
-      }
-
-      // --- Pindah langkah ---
-      function goToStep2() {
-        if (!selectedGame) return;
-        step1.classList.remove('active-step');
-        step2.classList.add('active-step');
-        dot1.classList.remove('active');
-        dot2.classList.add('active');
-        // Reset katalog selection ketika masuk step2 (kalau mau tetap konsisten)
-        // Tapi lebih baik reset agar user pilih ulang, atau pertahankan? 
-        // Sesuai permintaan: setelah pilih game, halaman berganti dan terdapat form dll.
-        // Kita reset pilihan katalog agar bersih.
-        selectedCatalog = null;
-        renderCatalog();
-        // Kosongkan input jika perlu (biar segar) - opsional, bisa dipertahankan.
-        // Saya kosongkan agar sesuai "halaman berganti" dan form baru.
-        userIdInput.value = '';
-        userTextInput.value = '';
-        finalSubmitBtn.disabled = true;
-        step2Note.textContent = 'Isi ID, teks, dan pilih katalog';
-      }
-
-      // --- Fungsi final: pindah ke file lain (simulasi) ---
-      function proceedToOtherFile() {
-        const id = userIdInput.value.trim();
-        const text = userTextInput.value.trim();
-        
-        // Data survei lengkap
-        const surveyData = {
-          game: selectedGame,
-          id: id,
-          namaText: text,
-          katalog: selectedCatalog
-        };
-
-        console.log('📋 Data survei siap dikirim:', surveyData);
-        
-      
-        // Opsi: alert dulu untuk memberi tahu bahwa akan pindah.
-        alert(`✅ Survei selesai! Melanjutkan ke halaman lain.\nGame: ${selectedGame}\nID: ${id}\nNama: ${text}\nKatalog: ${selectedCatalog}`);
-        
-        // Buka file lain (contoh: 'hasil.html' di folder yang sama). Sesuaikan dengan kebutuhan.
-        // Menggunakan window.location.href untuk berpindah di tab yang sama.
-        window.location.href = `bani-gembrot.html`;
-        
-        // Jika ingin file terpisah tanpa query, cukup: window.location.href = "hasil.html";
-        // Untuk keperluan demo, saya arahkan ke halaman relatif.
-      }
-
-      // --- Event Listeners ---
-      gameSelect.addEventListener('change', checkGameSelection);
-
-      toStep2Btn.addEventListener('click', goToStep2);
-
-      // Validasi real-time di step 2
-      userIdInput.addEventListener('input', validateStep2);
-      userTextInput.addEventListener('input', validateStep2);
-
-      finalSubmitBtn.addEventListener('click', proceedToOtherFile);
-
-      // Inisialisasi awal
-      checkGameSelection();
-      renderCatalog(); // render katalog di background walau belum visible
-      // Pastikan step2 tidak aktif
-      step2.classList.remove('active-step');
-      dot2.classList.remove('active');
-      
-      // Jika user mencoba kembali (opsional, tidak diminta tapi bisa ditambahkan tombol kembali)
-      // Untuk simplicity tidak ditambahkan, fokus sesuai permintaan.
-    })();
-  </script>
+  // Tombol lanjutkan: LANGSUNG PINDAH FILE, TANPA DATA DI URL
+  finalSubmitBtn.addEventListener('click', function() {
+    // Langsung pindah ke file lain, URL bersih tanpa parameter
+    window.location.href = 'bani-gembrot.html';
+  });
+      </script>
 </body>
 </html>
