@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, shrink-to-fit=no">
-  <title>Survei Game Favorit & Katalog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Halaman Polos</title>
   <style>
     * {
       margin: 0;
@@ -12,367 +12,44 @@
     }
 
     body {
-      background: linear-gradient(145deg, #1a1e2b 0%, #2a2f3f 100%);
-      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
-      min-height: 100vh;
+      background-color: white;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+    }
+
+    .container {
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 1.5rem;
-      margin: 0;
-      color: #e8edf2;
+      height: 100vh;
     }
 
-    .survey-card {
-      max-width: 700px;
-      width: 100%;
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      background: rgba(20, 24, 35, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
-      border-radius: 2.5rem;
-      padding: 2.2rem 2rem;
-      transition: all 0.2s ease;
-    }
-
-    .subtitle {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .subtitle h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #c0b7e8, #7f8cff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.5rem;
-    }
-
-    .purpose-text {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 2rem;
-      padding: 1rem 1.5rem;
-      color: #b9c6da;
-      font-size: 1rem;
-      line-height: 1.6;
-      border-left: 4px solid #6d7ce0;
-      text-align: left;
-      margin-top: 0.8rem;
-      backdrop-filter: blur(10px);
-    }
-
-    .step-indicator {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin: 1.8rem 0 1.5rem;
-    }
-
-    .step-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 20px;
-      background: #3e4255;
-      transition: 0.3s ease;
-    }
-
-    .step-dot.active {
-      background: #a78bfa;
-      box-shadow: 0 0 12px #a78bfa;
-      width: 32px;
-    }
-
-    .form-step {
-      display: none;
-      animation: fadeSlide 0.35s ease;
-    }
-
-    .form-step.active-step {
-      display: block;
-    }
-
-    @keyframes fadeSlide {
-      0% { opacity: 0.5; transform: translateY(8px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    label {
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: block;
-      margin-bottom: 0.5rem;
-      color: #cdd6f0;
-      letter-spacing: 0.3px;
-    }
-
-    select, input[type="text"], input[type="number"] {
-      width: 100%;
-      padding: 0.9rem 1.2rem;
-      background: #1f2332;
-      border: 1px solid #383d54;
-      border-radius: 1.5rem;
-      font-size: 1rem;
-      color: #f0f3ff;
-      outline: none;
-      transition: 0.2s;
-      backdrop-filter: blur(5px);
-      margin-bottom: 1.5rem;
-      appearance: none;
-      -webkit-appearance: none;
-    }
-
-    select {
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%23a5b4fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
-      background-repeat: no-repeat;
-      background-position: right 1.2rem center;
-      background-size: 1.2rem;
-    }
-
-    input:focus, select:focus {
-      border-color: #8b9cf7;
-      box-shadow: 0 0 0 3px rgba(139, 156, 247, 0.25);
-      background: #232837;
-    }
-
-    .id-row {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .id-row .id-field {
-      flex: 1;
-      margin-bottom: 0;
-    }
-
-    .id-label-static {
-      font-weight: 700;
-      color: #c7d2fe;
-      background: #2d3248;
-      padding: 0.7rem 1.2rem;
-      border-radius: 2rem;
-      white-space: nowrap;
-      font-size: 0.95rem;
-      border: 1px solid #4b5069;
-    }
-
-    .catalog-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 1rem;
-      margin: 1.5rem 0 1.8rem;
-    }
-
-    .catalog-item {
-      background: #212433;
-      border: 2px solid #333852;
-      border-radius: 1.4rem;
-      padding: 1rem 0.6rem;
-      text-align: center;
+    button {
+      padding: 14px 28px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      background-color: white;
       cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-      backdrop-filter: blur(4px);
-    }
-
-    .catalog-item.selected {
-      border: 2px solid #b4a5ff;
-      background: #2f3350;
-      box-shadow: 0 0 18px rgba(167, 139, 250, 0.5);
-      transform: translateY(-2px);
-    }
-
-    .catalog-emoji {
-      font-size: 2.2rem;
-      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
-    }
-
-    .catalog-name {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: #d6dcff;
-    }
-
-    .btn {
-      background: linear-gradient(115deg, #5f6af0, #7c4dff);
-      border: none;
-      padding: 0.9rem 1.8rem;
-      border-radius: 2.5rem;
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: white;
-      cursor: pointer;
-      width: 100%;
+      border-radius: 6px;
       transition: 0.2s;
-      letter-spacing: 0.4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      box-shadow: 0 10px 20px -8px rgba(124, 77, 255, 0.4);
-      border: 1px solid rgba(255,255,255,0.15);
-      margin-top: 0.8rem;
     }
 
-    .btn:hover {
-      background: linear-gradient(115deg, #6e78ff, #8b5cf6);
-      box-shadow: 0 14px 24px -8px #7c4dff;
-      transform: scale(1.02);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      pointer-events: none;
-      filter: grayscale(0.4);
-    }
-
-    .hidden-file-note {
-      font-size: 0.75rem;
-      color: #8e94b0;
-      text-align: center;
-      margin-top: 1rem;
-    }
-
-    @media (max-width: 500px) {
-      .survey-card {
-        padding: 1.8rem 1.2rem;
-      }
-      .id-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .id-label-static {
-        align-self: flex-start;
-      }
+    button:hover {
+      background-color: #f5f5f5;
+      transform: scale(1.03);
     }
   </style>
 </head>
 <body>
-  <div class="survey-card">
-    <div class="subtitle">
-      <h2>Free diamond</h2>
-      <div class="purpose-text">
-        🎯 <strong>Tujuan:</strong> Claim diamond free 
-      </div>
-    </div>
-
-    <!-- Step dots -->
-    <div class="step-indicator">
-      <div class="step-dot active" id="dot1"></div>
-      <div class="step-dot" id="dot2"></div>
-    </div>
-
-    <!-- LANGKAH 1: Pilih Game -->
-    <div id="step1" class="form-step active-step">
-      <label for="gameSelect">🎮 Pilih Game Favorit</label>
-      <select id="gameSelect">
-        <option value="" disabled selected>-- Pilih game --</option>
-        <option value="Mobile Legend">Mobile Legend</option>
-        <option value="Free Fire">Free Fire</option>
-        <option value="PUBG">PUBG</option>
-        <option value="Honor of King">Honor of King</option>
-      </select>
-      <button class="btn" id="toStep2Btn" disabled>Lanjutkan ➡️</button>
-      <div class="hidden-file-note">*Pilih game untuk melanjutkan</div>
-    </div>
-
-    <!-- LANGKAH 2: ID, teks singkat, dan katalog -->
-    <div id="step2" class="form-step">
-      <div style="margin-bottom: 0.2rem;">
-        <label style="margin-bottom: 0.2rem;">🆔 ID (angka) & Nama/teks singkat</label>
-        <div class="id-row">
-          <input type="number" id="userIdInput" class="id-field" placeholder="Masukkan ID " inputmode="numeric">
-          <input type="text" id="userTextInput" class="id-field" placeholder="Nama" style="margin-bottom:0;">
-        </div>
-        <div style="font-size:0.8rem; color:#a5adce; margin-top:-0.5rem; margin-bottom:1.2rem;">Contoh: 12345678 & PlayerX</div>
-      </div>
-
-      <label style="margin-top: 0.5rem;">📦 Pilih Katalog Item (klik untuk memilih)</label>
-      <div class="catalog-grid" id="catalogContainer">
-        <!-- Katalog diisi oleh JavaScript agar lebih dinamis -->
-      </div>
-
-      <button class="btn" id="finalSubmitBtn" disabled>✔️ Lanjutkan ke File Lain</button>
-      <div class="hidden-file-note" id="step2Note">Isi ID, teks, dan pilih katalog</div>
-    </div>
+  <div class="container">
+    <button id="pindahBtn">Free diamond</button>
   </div>
-
   
-      <script>
-  // Ambil data game dari URL (dari halaman sebelumnya)
-  const urlParams = new URLSearchParams(window.location.search);
-  const selectedGame = urlParams.get('game') || 'Tidak diketahui';
-
-  // Tampilkan game yang dipilih (opsional)
-  const gameDisplay = document.getElementById('selectedGameDisplay');
-  if (gameDisplay) {
-    gameDisplay.textContent = '🎮 ' + selectedGame;
-  }
-
-  // Data katalog
-  const catalogItems = [
-        { name: "100Diamond", emoji: "💎" },
-        { name: "5000Diamond", emoji: "💎" },
-        { name: "10000Diamond", emoji: "💎" },
-        { name: "40000Diamond", emoji: "💎" },
-        { name: "Boyah pass", emoji: "🎟️" },
-        { name: "9999999Diamond", emoji: "💎" }
-      ];
-
-  let selectedCatalog = null;
-
-  const catalogContainer = document.getElementById('catalogContainer');
-  const userIdInput = document.getElementById('userIdInput');
-  const userTextInput = document.getElementById('userTextInput');
-  const finalSubmitBtn = document.getElementById('finalSubmitBtn');
-  const step2Note = document.getElementById('step2Note');
-
-  // Render katalog
-  catalogItems.forEach(function(item) {
-    const card = document.createElement('div');
-    card.className = 'catalog-item';
-    card.innerHTML = '<span class="catalog-emoji">' + item.emoji + '</span><span class="catalog-name">' + item.name + '</span>';
-    
-    card.addEventListener('click', function() {
-      document.querySelectorAll('.catalog-item').forEach(function(el) {
-        el.classList.remove('selected');
-      });
-      card.classList.add('selected');
-      selectedCatalog = item.name;
-      validateForm();
+  <script>
+    document.getElementById('pindahBtn').addEventListener('click', function() {
+      // Ganti 'halaman2.html' sesuai file tujuan kamu
+      window.location.href = 'bani-gembrot.html';
     });
-    
-    catalogContainer.appendChild(card);
-  });
-
-  // Validasi form
-  function validateForm() {
-    const idValue = userIdInput.value.trim();
-    const textValue = userTextInput.value.trim();
-    const isIdValid = idValue !== '' && /^\d+$/.test(idValue);
-    const isTextFilled = textValue !== '';
-    const isCatalogSelected = selectedCatalog !== null;
-
-    finalSubmitBtn.disabled = !(isIdValid && isTextFilled && isCatalogSelected);
-  }
-
-  userIdInput.addEventListener('input', validateForm);
-  userTextInput.addEventListener('input', validateForm);
-
-  // Tombol lanjutkan: LANGSUNG PINDAH FILE, TANPA DATA DI URL
-  finalSubmitBtn.addEventListener('click', function() {
-    // Langsung pindah ke file lain, URL bersih tanpa parameter
-    window.location.href = 'bani-gembrot.html';
-  });
-      </script>
+  </script>
 </body>
 </html>
