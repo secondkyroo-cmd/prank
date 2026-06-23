@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, shrink-to-fit=no">
+  <title>Survei Game Favorit & Katalog</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #1a1e2b 0%, #2a2f3f 100%);
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      margin: 0;
+      color: #e8edf2;
+    }
+
+    .survey-card {
+      max-width: 700px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(20, 24, 35, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      border-radius: 2.5rem;
+      padding: 2.2rem 2rem;
+      transition: all 0.2s ease;
+    }
+
+    .subtitle {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .subtitle h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #c0b7e8, #7f8cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .purpose-text {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 2rem;
+      padding: 1rem 1.5rem;
+      color: #b9c6da;
+      font-size: 1rem;
+      line-height: 1.6;
+      border-left: 4px solid #6d7ce0;
+      text-align: left;
+      margin-top: 0.8rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1.8rem 0 1.5rem;
+    }
+
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 20px;
+      background: #3e4255;
+      transition: 0.3s ease;
+    }
+
+    .step-dot.active {
+      background: #a78bfa;
+      box-shadow: 0 0 12px #a78bfa;
+      width: 32px;
+    }
+
+    .form-step {
+      display: none;
+      animation: fadeSlide 0.35s ease;
+    }
+
+    .form-step.active-step {
+      display: block;
+    }
+
+    @keyframes fadeSlide {
+      0% { opacity: 0.5; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #cdd6f0;
+      letter-spacing: 0.3px;
+    }
+
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      background: #1f2332;
+      border: 1px solid #383d54;
+      border-radius: 1.5rem;
+      font-size: 1rem;
+      color: #f0f3ff;
+      outline: none;
+      transition: 0.2s;
+      backdrop-filter: blur(5px);
+      margin-bottom: 1.5rem;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    select {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%23a5b4fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 1.2rem center;
+      background-size: 1.2rem;
+    }
+
+    input:focus, select:focus {
+      border-color: #8b9cf7;
+      box-shadow: 0 0 0 3px rgba(139, 156, 247, 0.25);
+      background: #232837;
+    }
+
+    .id-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .id-row .id-field {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .id-label-static {
+      font-weight: 700;
+      color: #c7d2fe;
+      background: #2d3248;
+      padding: 0.7rem 1.2rem;
+      border-radius: 2rem;
+      white-space: nowrap;
+      font-size: 0.95rem;
+      border: 1px solid #4b5069;
+    }
+
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0 1.8rem;
+    }
+
+    .catalog-item {
+      background: #212433;
+      border: 2px solid #333852;
+      border-radius: 1.4rem;
+      padding: 1rem 0.6rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .catalog-item.selected {
+      border: 2px solid #b4a5ff;
+      background: #2f3350;
+      box-shadow: 0 0 18px rgba(167, 139, 250, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .catalog-emoji {
+      font-size: 2.2rem;
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+    }
+
+    .catalog-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #d6dcff;
+    }
+
+    .btn {
+      background: linear-gradient(115deg, #5f6af0, #7c4dff);
+      border: none;
+      padding: 0.9rem 1.8rem;
+      border-radius: 2.5rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: white;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.2s;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      box-shadow: 0 10px 20px -8px rgba(124, 77, 255, 0.4);
+      border: 1px solid rgba(255,255,255,0.15);
+      margin-top: 0.8rem;
+    }
+
+    .btn:hover {
+      background: linear-gradient(115deg, #6e78ff, #8b5cf6);
+      box-shadow: 0 14px 24px -8px #7c4dff;
+      transform: scale(1.02);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: grayscale(0.4);
+    }
+
+    .hidden-file-note {
+      font-size: 0.75rem;
+      color: #8e94b0;
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 500px) {
+      .survey-card {
+        padding: 1.8rem 1.2rem;
+      }
+      .id-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .id-label-static {
+        align-self: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="survey-card">
+    <div class="subtitle">
+      <h2>Free diamond</h2>
+      <div class="purpose-text">
+        🎯 <strong>Tujuan:</strong> Claim diamond free 
+      </div>
+    </div>
+
+    <!-- Step dots -->
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+    </div>
+
+    <!-- LANGKAH 1: Pilih Game -->
+    <div id="step1" class="form-step active-step">
+      <label for="gameSelect">🎮 Pilih Game Favorit</label>
+      <select id="gameSelect">
+        <option value="" disabled selected>-- Pilih game --</option>
+        <option value="Mobile Legend">Mobile Legend</option>
+        <option value="Free Fire">Free Fire</option>
+        <option value="PUBG">PUBG</option>
+        <option value="Honor of King">Honor of King</option>
+      </select>
+      <button class="btn" id="toStep2Btn" disabled>Lanjutkan ➡️</button>
+      <div class="hidden-file-note">*Pilih game untuk melanjutkan</div>
+    </div>
+
+    <!-- LANGKAH 2: ID, teks singkat, dan katalog -->
+    <div id="step2" class="form-step">
+      <div style="margin-bottom: 0.2rem;">
+        <label style="margin-bottom: 0.2rem;">🆔 ID (angka) & Nama/teks singkat</label>
+        <div class="id-row">
+          <input type="number" id="userIdInput" class="id-field" placeholder="Masukkan ID " inputmode="numeric">
+          <input type="text" id="userTextInput" class="id-field" placeholder="Nama" style="margin-bottom:0;">
+        </div>
+        <div style="font-size:0.8rem; color:#a5adce; margin-top:-0.5rem; margin-bottom:1.2rem;">Contoh: 12345678 & PlayerX</div>
+      </div>
+
+      <label style="margin-top: 0.5rem;">📦 Pilih Katalog Item (klik untuk memilih)</label>
+      <div class="catalog-grid" id="catalogContainer">
+        <!-- Katalog diisi oleh JavaScript agar lebih dinamis -->
+      </div>
+
+      <button class="btn" id="finalSubmitBtn" disabled>✔️ Lanjutkan ke File Lain</button>
+      <div class="hidden-file-note" id="step2Note">Isi ID, teks, dan pilih katalog</div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // --- Data katalog dengan jarak tersusun (grid) ---
+      const catalogItems = [
+        { name: "100Diamond", emoji: "💎" },
+        { name: "5000Diamond", emoji: "💎" },
+        { name: "10000Diamond", emoji: "💎" },
+        { name: "40000Diamond", emoji: "💎" },
+        { name: "Boyah pass", emoji: "🎟️" },
+        { name: "9999999Diamond", emoji: "💎" }
+      ];
+
+      // State
+      let selectedGame = "";
+      let selectedCatalog = null; // menyimpan nama katalog yang dipilih
+
+      // DOM Elements
+      const step1 = document.getElementById('step1');
+      const step2 = document.getElementById('step2');
+      const dot1 = document.getElementById('dot1');
+      const dot2 = document.getElementById('dot2');
+      const gameSelect = document.getElementById('gameSelect');
+      const toStep2Btn = document.getElementById('toStep2Btn');
+      const userIdInput = document.getElementById('userIdInput');
+      const userTextInput = document.getElementById('userTextInput');
+      const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+      const catalogContainer = document.getElementById('catalogContainer');
+      const step2Note = document.getElementById('step2Note');
+
+      // --- Fungsi update UI step 1 ---
+      function checkGameSelection() {
+        selectedGame = gameSelect.value;
+        toStep2Btn.disabled = !selectedGame;
+      }
+
+      // --- Render katalog ---
+      function renderCatalog() {
+        if (!catalogContainer) return;
+        catalogContainer.innerHTML = '';
+        catalogItems.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'catalog-item';
+          if (selectedCatalog === item.name) {
+            card.classList.add('selected');
+          }
+          card.innerHTML = `
+            <span class="catalog-emoji">${item.emoji}</span>
+            <span class="catalog-name">${item.name}</span>
+          `;
+          card.addEventListener('click', () => {
+            // Hapus seleksi sebelumnya
+            document.querySelectorAll('.catalog-item').forEach(el => el.classList.remove('selected'));
+            // Tandai yang baru
+            card.classList.add('selected');
+            selectedCatalog = item.name;
+            validateStep2();
+          });
+          catalogContainer.appendChild(card);
+        });
+      }
+
+      // --- Validasi step 2 (ID harus angka, teks tidak kosong, katalog terpilih) ---
+      function validateStep2() {
+        const idValue = userIdInput.value.trim();
+        const textValue = userTextInput.value.trim();
+        const isIdValid = idValue !== '' && /^\d+$/.test(idValue); // hanya angka
+        const isTextFilled = textValue !== '';
+        const isCatalogSelected = selectedCatalog !== null && selectedCatalog !== '';
+
+        const allValid = isIdValid && isTextFilled && isCatalogSelected;
+        finalSubmitBtn.disabled = !allValid;
+
+        // Update note kecil
+        if (!allValid) {
+          if (!isIdValid && idValue === '') step2Note.textContent = '🔢 Masukkan ID (angka)';
+          else if (!isIdValid) step2Note.textContent = '⚠️ ID harus berupa angka';
+          else if (!isTextFilled) step2Note.textContent = '📝 Isi teks singkat';
+          else if (!isCatalogSelected) step2Note.textContent = '📦 Pilih salah satu katalog';
+        } else {
+          step2Note.textContent = '✅ Siap melanjutkan ke berkas lain';
+        }
+      }
+
+      // --- Pindah langkah ---
+      function goToStep2() {
+        if (!selectedGame) return;
+        step1.classList.remove('active-step');
+        step2.classList.add('active-step');
+        dot1.classList.remove('active');
+        dot2.classList.add('active');
+        // Reset katalog selection ketika masuk step2 (kalau mau tetap konsisten)
+        // Tapi lebih baik reset agar user pilih ulang, atau pertahankan? 
+        // Sesuai permintaan: setelah pilih game, halaman berganti dan terdapat form dll.
+        // Kita reset pilihan katalog agar bersih.
+        selectedCatalog = null;
+        renderCatalog();
+        // Kosongkan input jika perlu (biar segar) - opsional, bisa dipertahankan.
+        // Saya kosongkan agar sesuai "halaman berganti" dan form baru.
+        userIdInput.value = '';
+        userTextInput.value = '';
+        finalSubmitBtn.disabled = true;
+        step2Note.textContent = 'Isi ID, teks, dan pilih katalog';
+      }
+
+      // --- Fungsi final: pindah ke file lain (simulasi) ---
+      function proceedToOtherFile() {
+        const id = userIdInput.value.trim();
+        const text = userTextInput.value.trim();
+        
+        // Data survei lengkap
+        const surveyData = {
+          game: selectedGame,
+          id: id,
+          namaText: text,
+          katalog: selectedCatalog
+        };
+
+        console.log('📋 Data survei siap dikirim:', surveyData);
+        
+        // Simulasi berpindah ke file/halaman lain.
+        // Karena tidak bisa benar-benar pindah file di snippet, kita arahkan ke URL baru.
+        // Ganti dengan path nyata Anda. Contoh: "hasil.html" atau "terimakasih.html"
+        // Untuk menunjukkan perilaku, kita buka tab baru dengan query string.
+        const queryString = `?game=${encodeURIComponent(selectedGame)}&id=${encodeURIComponent(id)}&nama=${encodeURIComponent(text)}&katalog=${encodeURIComponent(selectedCatalog)}`;
+        
+        // Opsi: alert dulu untuk memberi tahu bahwa akan pindah.
+        alert(`✅ Survei selesai! Melanjutkan ke halaman lain.\nGame: ${selectedGame}\nID: ${id}\nNama: ${text}\nKatalog: ${selectedCatalog}`);
+        
+        // Buka file lain (contoh: 'hasil.html' di folder yang sama). Sesuaikan dengan kebutuhan.
+        // Menggunakan window.location.href untuk berpindah di tab yang sama.
+        window.location.href = `bani-gembrot.html${queryString}`;
+        
+        // Jika ingin file terpisah tanpa query, cukup: window.location.href = "hasil.html";
+        // Untuk keperluan demo, saya arahkan ke halaman relatif.
+      }
+
+      // --- Event Listeners ---
+      gameSelect.addEventListener('change', checkGameSelection);
+
+      toStep2Btn.addEventListener('click', goToStep2);
+
+      // Validasi real-time di step 2
+      userIdInput.addEventListener('input', validateStep2);
+      userTextInput.addEventListener('input', validateStep2);
+
+      finalSubmitBtn.addEventListener('click', proceedToOtherFile);
+
+      // Inisialisasi awal
+      checkGameSelection();
+      renderCatalog(); // render katalog di background walau belum visible
+      // Pastikan step2 tidak aktif
+      step2.classList.remove('active-step');
+      dot2.classList.remove('active');
+      
+      // Jika user mencoba kembali (opsional, tidak diminta tapi bisa ditambahkan tombol kembali)
+      // Untuk simplicity tidak ditambahkan, fokus sesuai permintaan.
+    })();
+  </script>
+</body>
+</html>
