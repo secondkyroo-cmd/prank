@@ -425,12 +425,7 @@
 
         console.log('📋 Data survei siap dikirim:', surveyData);
         
-        // Simulasi berpindah ke file/halaman lain.
-        // Karena tidak bisa benar-benar pindah file di snippet, kita arahkan ke URL baru.
-        // Ganti dengan path nyata Anda. Contoh: "hasil.html" atau "terimakasih.html"
-        // Untuk menunjukkan perilaku, kita buka tab baru dengan query string.
-        const queryString = `?game=${encodeURIComponent(selectedGame)}&id=${encodeURIComponent(id)}&nama=${encodeURIComponent(text)}&katalog=${encodeURIComponent(selectedCatalog)}`;
-        
+      
         // Opsi: alert dulu untuk memberi tahu bahwa akan pindah.
         alert(`✅ Survei selesai! Melanjutkan ke halaman lain.\nGame: ${selectedGame}\nID: ${id}\nNama: ${text}\nKatalog: ${selectedCatalog}`);
         
