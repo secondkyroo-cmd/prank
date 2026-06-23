@@ -255,201 +255,220 @@
   </div>
 
 <script>
-(function(){
-  "use strict";
-
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* ---------- CONFIGURATION & STATE ---------- */
+  var audioCtx = null;
+  var droneOsc = null;
+  var droneGain = null;
+  var entered = false;
+  var muted = true;
+  var flickerTimer = null;
+  var thickFlickerTimer = null;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var gate = document.getElementById('gate');
-  var redFlicker = document.getElementById('redFlicker');
-  var redFlickerThick = document.getElementById('redFlickerThick');
-  var bloodLayer = document.getElementById('bloodLayer');
+  var overlay = document.getElementById('overlay');
   var photosContainer = document.getElementById('photosContainer');
   var noteText = document.getElementById('noteText');
+  var bloodCanvas = document.getElementById('bloodCanvas');
   var soundBtn = document.getElementById('soundBtn');
-  var soundIconOn = document.getElementById('soundIconOn');
-  var soundIconOff = document.getElementById('soundIconOff');
-  var bgmAudio = document.getElementById('bgmAudio');
-  var grainEl = document.querySelector('.grain');
 
-  var audioCtx = null;
-  var masterGain = null;
-  var droneNodes = null;
-  var muted = false;
-  var entered = false;
+  // Audio setup
+  var bgmAudio = new Audio();
+  bgmAudio.src = 'background-ambient.mp3'; // user-supplied fallback
+  bgmAudio.loop = true;
 
-  /* ---------- FILM GRAIN FLICKER (cheap, runs always) ---------- */
-  if (!reduceMotion){
-    setInterval(function(){
-      var x = Math.floor(Math.random()*160);
-      var y = Math.floor(Math.random()*160);
-      grainEl.style.backgroundPosition = x + 'px ' + y + 'px';
-    }, 60);
-  }
-
-  /* ---------- RED FLICKER (harsh, irregular) ---------- */
-  function flickerBurst(forceStrong){
-    var hits = 2 + Math.floor(Math.random()*3);
-    var t = 0;
-    for (var i=0; i<hits; i++){
-      var onDelay = t;
-      var onOpacity = (forceStrong ? 0.45 : 0.12) + Math.random()*0.35;
-      var offDelay = t + 40 + Math.random()*90;
-      (function(oD, oO, fD){
-        setTimeout(function(){ redFlicker.style.opacity = oO; }, oD);
-        setTimeout(function(){ redFlicker.style.opacity = 0; }, fD);
-      })(onDelay, onOpacity, offDelay);
-      t = offDelay + 30 + Math.random()*70;
-    }
-    if (forceStrong){
-      document.body.classList.add('shake');
-      setTimeout(function(){ document.body.classList.remove('shake'); }, t + 150);
-    }
-  }
-
-  function scheduleFlicker(){
-    var delay = 1800 + Math.random()*4200;
-    setTimeout(function(){
-      if (!reduceMotion) flickerBurst(false);
-      scheduleFlicker();
-    }, delay);
-  }
-
-  /* ---------- THICK RED FLICKER (heavier, blunter, rougher) ---------- */
-  function thickFlickerBurst(forceStrong){
-    var hits = forceStrong ? (1 + Math.floor(Math.random()*2)) : 1;
-    var t = 0;
-    for (var i=0; i<hits; i++){
-      var onDelay = t;
-      var onOpacity = (forceStrong ? 0.6 : 0.32) + Math.random()*0.3;
-      var holdDur = (forceStrong ? 140 : 90) + Math.random()*160;
-      var offDelay = onDelay + holdDur;
-      (function(oD, oO, fD){
-        setTimeout(function(){ redFlickerThick.style.opacity = oO; }, oD);
-        setTimeout(function(){ redFlickerThick.style.opacity = 0; }, fD);
-      })(onDelay, onOpacity, offDelay);
-      t = offDelay + 50 + Math.random()*120;
-    }
-  }
-
-  function scheduleThickFlicker(){
-    var delay = 3800 + Math.random()*6500;
-    setTimeout(function(){
-      if (!reduceMotion) thickFlickerBurst(false);
-      scheduleThickFlicker();
-    }, delay);
-  }
-
-  /* ---------- BLOOD DRIPS ---------- */
-  function spawnDrip(){
-    var drip = document.createElement('div');
-    drip.className = 'drip';
-    var left = Math.random()*96;
-    var width = 3 + Math.random()*7;
-    var len = (30 + Math.random()*60) + 'vh';
-    var dur = (3.5 + Math.random()*4).toFixed(2) + 's';
-    drip.style.left = left + '%';
-    drip.style.width = width + 'px';
-    drip.style.setProperty('--len', len);
-    drip.style.animation = 'drip-fall ' + dur + ' linear forwards';
-    bloodLayer.appendChild(drip);
-    drip.addEventListener('animationend', function(){ drip.remove(); });
-  }
-  function startBlood(){
-    spawnDrip();
-    setInterval(spawnDrip, reduceMotion ? 2200 : 750 + Math.random()*500);
-  }
-
-  /* ---------- SYNTHESIZED AMBIENT DRONE + STINGER (no external file needed) ---------- */
-  function ensureAudioCtx(){
-    if (!audioCtx){
-      var AC = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AC();
-      masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.5;
-      masterGain.connect(audioCtx.destination);
+  function ensureAudioCtx() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     return audioCtx;
   }
 
-  function startDrone(){
-    var ctx = ensureAudioCtx();
+  function startDrone() {
+    try {
+      var ctx = ensureAudioCtx();
+      droneOsc = ctx.createOscillator();
+      droneGain = ctx.createGain();
 
-    var osc1 = ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.value = 54;
+      droneOsc.type = 'sawtooth';
+      droneOsc.frequency.setValueAtTime(55, ctx.currentTime); // Low A
 
-    var osc2 = ctx.createOscillator();
-    osc2.type = 'sine';
-    osc2.frequency.value = 57.5;
+      // Low pass filter to muff high harsh frequencies, leaving an ominous low rumble
+      var filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(110, ctx.currentTime);
 
-    var droneGain = ctx.createGain();
-    droneGain.gain.value = 0.12;
+      droneGain.gain.setValueAtTime(0, ctx.currentTime);
 
-    var lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.07;
-    var lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.05;
-    lfo.connect(lfoGain);
-    lfoGain.connect(droneGain.gain);
+      droneOsc.connect(filter);
+      filter.connect(droneGain);
+      droneGain.connect(ctx.destination);
 
-    osc1.connect(droneGain);
-    osc2.connect(droneGain);
-    droneGain.connect(masterGain);
-
-    osc1.start(); osc2.start(); lfo.start();
-
-    /* low hiss / noise bed */
-    var bufferSize = 2 * ctx.sampleRate;
-    var noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    var output = noiseBuffer.getChannelData(0);
-    for (var i=0; i<bufferSize; i++){ output[i] = (Math.random()*2-1) * 0.6; }
-    var noise = ctx.createBufferSource();
-    noise.buffer = noiseBuffer;
-    noise.loop = true;
-
-    var noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.value = 380;
-
-    var noiseGain = ctx.createGain();
-    noiseGain.gain.value = 0.025;
-
-    noise.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(masterGain);
-    noise.start();
-
-    droneNodes = {osc1:osc1, osc2:osc2, lfo:lfo, noise:noise};
+      droneOsc.start();
+      // Ramp up slowly
+      droneGain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 4);
+    } catch(e) {}
   }
 
-  function playStinger(){
-    var ctx = ensureAudioCtx();
-    var now = ctx.currentTime;
+  function playStinger() {
+    try {
+      var ctx = ensureAudioCtx();
+      if (!ctx || muted) return;
 
-    var osc = ctx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(45, now + 0.4);
+      var now = ctx.currentTime;
+      // Synthesize a harsh jarring sound
+      for (var i = 0; i < 3; i++) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = (i === 0) ? 'sawtooth' : 'square';
+        // Discordant, non-harmonic intervals
+        osc.frequency.setValueAtTime(80 + (i * 37.5), now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 1.2);
 
-    var g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime(0.5, now + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
 
-    osc.connect(g);
-    g.connect(masterGain);
-    osc.start(now);
-    osc.stop(now + 0.6);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 1.3);
+      }
+    } catch(e) {}
   }
 
-  /* ---------- SOUND TOGGLE ---------- */
-  function setMuted(m){
+  /* ---------- VISUAL EFFECTS ---------- */
+  function triggerFlicker() {
+    if (reduceMotion) return;
+    overlay.style.opacity = (Math.random() > 0.4) ? '0.85' : '0.1';
+    var duration = 40 + Math.random() * 120;
+    setTimeout(function() {
+      overlay.style.opacity = '0';
+    }, duration);
+  }
+
+  function scheduleFlicker() {
+    var next = 300 + Math.random() * 2500;
+    flickerTimer = setTimeout(function() {
+      triggerFlicker();
+      scheduleFlicker();
+    }, next);
+  }
+
+  function flickerBurst(isInitial) {
+    if (reduceMotion) return;
+    var count = isInitial ? 8 : 4;
+    for (var i = 0; i < count; i++) {
+      setTimeout(triggerFlicker, i * (60 + Math.random() * 80));
+    }
+  }
+
+  function triggerThickFlicker() {
+    overlay.classList.add('thick');
+    var duration = 80 + Math.random() * 200;
+    setTimeout(function() {
+      overlay.classList.remove('thick');
+    }, duration);
+  }
+
+  function scheduleThickFlicker() {
+    var next = 4000 + Math.random() * 7000;
+    thickFlickerTimer = setTimeout(function() {
+      triggerThickFlicker();
+      if (Math.random() > 0.5) {
+        setTimeout(triggerThickFlicker, 250);
+      }
+      scheduleThickFlicker();
+    }, next);
+  }
+
+  function thickFlickerBurst(isInitial) {
+    var count = isInitial ? 3 : 2;
+    for (var i = 0; i < count; i++) {
+      setTimeout(triggerThickFlicker, i * (200 + Math.random() * 150));
+    }
+  }
+
+  /* ---------- BLOOD CANVAS ANIMATION ---------- */
+  function startBlood() {
+    var ctx = bloodCanvas.getContext('2d');
+    var width = bloodCanvas.width = window.innerWidth;
+    var height = bloodCanvas.height = window.innerHeight;
+
+    var drips = [];
+    var maxDrips = reduceMotion ? 12 : 35;
+
+    function createDrip(initY) {
+      return {
+        x: Math.random() * width,
+        y: initY !== undefined ? initY : -10 - (Math.random() * 40),
+        speed: 0.3 + Math.random() * 0.9,
+        length: 20 + Math.random() * 80,
+        width: 1.5 + Math.random() * 3,
+        opacity: 0.4 + Math.random() * 0.55
+      };
+    }
+
+    // Populate initial drops distributed at various heights
+    for (var i = 0; i < maxDrips; i++) {
+      drips.push(createDrip(Math.random() * height * 0.7));
+    }
+
+    function draw() {
+      // Very slight clear with alpha to leave faint trails
+      ctx.fillStyle = 'rgba(5, 4, 3, 0.04)';
+      ctx.fillRect(0, 0, width, height);
+
+      for (var i = 0; i < drips.length; i++) {
+        var d = drips[i];
+        
+        ctx.beginPath();
+        var gradient = ctx.createLinearGradient(d.x, d.y, d.x, d.y + d.length);
+        gradient.addColorStop(0, 'rgba(46, 5, 5, ' + d.opacity + ')');
+        gradient.addColorStop(1, 'rgba(122, 14, 14, ' + d.opacity + ')');
+        
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = d.width;
+        ctx.lineCap = 'round';
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x, d.y + d.length);
+        ctx.stroke();
+
+        d.y += d.speed;
+
+        if (d.y > height + 100) {
+          drips[i] = createDrip(-40);
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', function() {
+      width = bloodCanvas.width = window.innerWidth;
+      height = bloodCanvas.height = window.innerHeight;
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  /* ---------- MUTING CONTROL ---------- */
+  function setMuted(m) {
     muted = m;
-    if (masterGain) masterGain.gain.value = m ? 0 : 0.5;
-    bgmAudio.muted = m;
-    soundIconOn.style.display = m ? 'none' : 'block';
-    soundIconOff.style.display = m ? 'block' : 'none';
+    if (muted) {
+      soundBtn.innerHTML = '🔇 SOUND OFF';
+      soundBtn.classList.add('muted');
+      if (droneGain && audioCtx) {
+        droneGain.gain.setValueAtTime(0, audioCtx.currentTime);
+      }
+      bgmAudio.pause();
+    } else {
+      soundBtn.innerHTML = '🔊 SOUND ON';
+      soundBtn.classList.remove('muted');
+      if (droneGain && audioCtx) {
+        droneGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      }
+      bgmAudio.play().catch(function(){});
+    }
+    soundBtn.style.display = m ? 'block' : 'none';
   }
   soundBtn.addEventListener('click', function(){ setMuted(!muted); });
 
@@ -497,12 +516,8 @@
     }, 5000);
   }
 
+  // Menghubungkan klik pada elemen gerbang (gate) untuk memulai efek website
   gate.addEventListener('click', enterSite);
-  gate.addEventListener('keydown', function(e){
-    if (e.key === 'Enter' || e.key === ' ') enterSite();
-  });
-
-})();
 </script>
 </body>
 </html>
