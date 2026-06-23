@@ -263,19 +263,17 @@
   var muted = true;
   var flickerTimer = null;
   var thickFlickerTimer = null;
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // Mengambil elemen sesuai dengan ID yang ada pada HTML asli Anda
   var gate = document.getElementById('gate');
-  var overlay = document.getElementById('overlay');
+  var redFlicker = document.getElementById('redFlicker');
+  var redFlickerThick = document.getElementById('redFlickerThick');
+  var bloodLayer = document.getElementById('bloodLayer');
   var photosContainer = document.getElementById('photosContainer');
   var noteText = document.getElementById('noteText');
-  var bloodCanvas = document.getElementById('bloodCanvas');
   var soundBtn = document.getElementById('soundBtn');
-
-  // Audio setup
-  var bgmAudio = new Audio();
-  bgmAudio.src = 'background-ambient.mp3'; // user-supplied fallback
-  bgmAudio.loop = true;
+  var bgmAudio = document.getElementById('bgmAudio');
 
   function ensureAudioCtx() {
     if (!audioCtx) {
@@ -293,7 +291,6 @@
       droneOsc.type = 'sawtooth';
       droneOsc.frequency.setValueAtTime(55, ctx.currentTime); // Low A
 
-      // Low pass filter to muff high harsh frequencies, leaving an ominous low rumble
       var filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(110, ctx.currentTime);
@@ -305,7 +302,6 @@
       droneGain.connect(ctx.destination);
 
       droneOsc.start();
-      // Ramp up slowly
       droneGain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 4);
     } catch(e) {}
   }
@@ -316,12 +312,10 @@
       if (!ctx || muted) return;
 
       var now = ctx.currentTime;
-      // Synthesize a harsh jarring sound
       for (var i = 0; i < 3; i++) {
         var osc = ctx.createOscillator();
         var gain = ctx.createGain();
         osc.type = (i === 0) ? 'sawtooth' : 'square';
-        // Discordant, non-harmonic intervals
         osc.frequency.setValueAtTime(80 + (i * 37.5), now);
         osc.frequency.exponentialRampToValueAtTime(40, now + 1.2);
 
@@ -339,10 +333,10 @@
   /* ---------- VISUAL EFFECTS ---------- */
   function triggerFlicker() {
     if (reduceMotion) return;
-    overlay.style.opacity = (Math.random() > 0.4) ? '0.85' : '0.1';
+    redFlicker.style.opacity = (Math.random() > 0.4) ? '0.85' : '0.1';
     var duration = 40 + Math.random() * 120;
     setTimeout(function() {
-      overlay.style.opacity = '0';
+      redFlicker.style.opacity = '0';
     }, duration);
   }
 
@@ -363,10 +357,10 @@
   }
 
   function triggerThickFlicker() {
-    overlay.classList.add('thick');
+    redFlickerThick.style.opacity = (Math.random() > 0.3) ? '0.7' : '0.2';
     var duration = 80 + Math.random() * 200;
     setTimeout(function() {
-      overlay.classList.remove('thick');
+      redFlickerThick.style.opacity = '0';
     }, duration);
   }
 
@@ -388,87 +382,55 @@
     }
   }
 
-  /* ---------- BLOOD CANVAS ANIMATION ---------- */
-  function startBlood() {
-    var ctx = bloodCanvas.getContext('2d');
-    var width = bloodCanvas.width = window.innerWidth;
-    var height = bloodCanvas.height = window.innerHeight;
+  /* ---------- BLOOD LAYER ANIMATION ---------- */
+  function spawnDrip() {
+    if (!bloodLayer) return;
+    var drip = document.createElement('div');
+    drip.className = 'blood-drip';
+    
+    var leftPos = Math.random() * 100;
+    var thick = 1.5 + Math.random() * 3.5;
+    var len = 30 + Math.random() * 90;
+    var dur = (4 + Math.random() * 6) + 's';
 
-    var drips = [];
-    var maxDrips = reduceMotion ? 12 : 35;
-
-    function createDrip(initY) {
-      return {
-        x: Math.random() * width,
-        y: initY !== undefined ? initY : -10 - (Math.random() * 40),
-        speed: 0.3 + Math.random() * 0.9,
-        length: 20 + Math.random() * 80,
-        width: 1.5 + Math.random() * 3,
-        opacity: 0.4 + Math.random() * 0.55
-      };
-    }
-
-    // Populate initial drops distributed at various heights
-    for (var i = 0; i < maxDrips; i++) {
-      drips.push(createDrip(Math.random() * height * 0.7));
-    }
-
-    function draw() {
-      // Very slight clear with alpha to leave faint trails
-      ctx.fillStyle = 'rgba(5, 4, 3, 0.04)';
-      ctx.fillRect(0, 0, width, height);
-
-      for (var i = 0; i < drips.length; i++) {
-        var d = drips[i];
-        
-        ctx.beginPath();
-        var gradient = ctx.createLinearGradient(d.x, d.y, d.x, d.y + d.length);
-        gradient.addColorStop(0, 'rgba(46, 5, 5, ' + d.opacity + ')');
-        gradient.addColorStop(1, 'rgba(122, 14, 14, ' + d.opacity + ')');
-        
-        ctx.strokeStyle = gradient;
-        ctx.lineWidth = d.width;
-        ctx.lineCap = 'round';
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(d.x, d.y + d.length);
-        ctx.stroke();
-
-        d.y += d.speed;
-
-        if (d.y > height + 100) {
-          drips[i] = createDrip(-40);
-        }
-      }
-      requestAnimationFrame(draw);
-    }
-
-    window.addEventListener('resize', function() {
-      width = bloodCanvas.width = window.innerWidth;
-      height = bloodCanvas.height = window.innerHeight;
+    drip.style.left = leftPos + '%';
+    drip.style.width = thick + 'px';
+    drip.style.height = len + 'px';
+    drip.style.animation = 'drip-fall ' + dur + ' linear forwards';
+    
+    bloodLayer.appendChild(drip);
+    
+    drip.addEventListener('animationend', function(){
+      drip.remove();
     });
+  }
 
-    requestAnimationFrame(draw);
+  function startBlood() {
+    spawnDrip();
+    setInterval(spawnDrip, reduceMotion ? 2200 : 750 + Math.random() * 500);
   }
 
   /* ---------- MUTING CONTROL ---------- */
   function setMuted(m) {
     muted = m;
+    var soundIconOn = document.getElementById('soundIconOn');
+    var soundIconOff = document.getElementById('soundIconOff');
+
     if (muted) {
-      soundBtn.innerHTML = '🔇 SOUND OFF';
-      soundBtn.classList.add('muted');
+      if(soundIconOn) soundIconOn.style.display = 'none';
+      if(soundIconOff) soundIconOff.style.display = 'inline';
       if (droneGain && audioCtx) {
         droneGain.gain.setValueAtTime(0, audioCtx.currentTime);
       }
-      bgmAudio.pause();
+      if(bgmAudio) bgmAudio.pause();
     } else {
-      soundBtn.innerHTML = '🔊 SOUND ON';
-      soundBtn.classList.remove('muted');
+      if(soundIconOn) soundIconOn.style.display = 'inline';
+      if(soundIconOff) soundIconOff.style.display = 'none';
       if (droneGain && audioCtx) {
         droneGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
       }
-      bgmAudio.play().catch(function(){});
+      if(bgmAudio) bgmAudio.play().catch(function(){});
     }
-    soundBtn.style.display = m ? 'block' : 'none';
   }
   soundBtn.addEventListener('click', function(){ setMuted(!muted); });
 
@@ -482,8 +444,9 @@
 
     var ctx = ensureAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
+    
     startDrone();
-    bgmAudio.play().catch(function(){ /* user supplies their own mp3 file to enable this track */ });
+    if(bgmAudio) bgmAudio.play().catch(function(){});
 
     soundBtn.classList.add('show');
     setMuted(false);
@@ -500,9 +463,11 @@
       if (!reduceMotion){
         setInterval(function(){
           var photos = photosContainer.querySelectorAll('.photo');
-          var p = photos[Math.floor(Math.random()*photos.length)];
-          p.classList.add('jitter');
-          setTimeout(function(){ p.classList.remove('jitter'); }, 350);
+          if(photos.length > 0) {
+            var p = photos[Math.floor(Math.random()*photos.length)];
+            p.classList.add('jitter');
+            setTimeout(function(){ p.classList.remove('jitter'); }, 350);
+          }
         }, 2600 + Math.random()*2000);
       }
 
@@ -516,8 +481,10 @@
     }, 5000);
   }
 
-  // Menghubungkan klik pada elemen gerbang (gate) untuk memulai efek website
+  // Memicu seluruh fungsi saat gerbang awal diklik
   gate.addEventListener('click', enterSite);
 </script>
 </body>
 </html>
+
+        
